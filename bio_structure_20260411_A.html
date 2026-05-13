@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Living Underwater Mesh Organism</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{
+  margin:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:#000;
+  color:#fff;
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  overscroll-behavior:none;
+  -webkit-text-size-adjust:100%;
+}
+body{
+  position:fixed;
+  inset:0;
+}
+#app{
+  position:fixed;
+  inset:0;
+  width:100vw;
+  height:100vh;
+  height:100dvh;
+  background:#000;
+  overflow:hidden;
+}
+#c{
+  position:fixed;
+  inset:0;
+  width:100vw;
+  height:100vh;
+  height:100dvh;
+  display:block;
+  background:#000;
+  touch-action:none;
+}
+#panel{
+  position:fixed;
+  left:0;
+  right:0;
+  bottom:0;
+  height:48vh;
+  height:48dvh;
+  min-height:280px;
+  max-height:calc(100dvh - 10px);
+  z-index:10;
+  background:linear-gradient(180deg,rgba(18,0,12,.34),rgba(6,0,6,.42));
+  border-top:1px solid rgba(255,79,160,.24);
+  border-radius:24px 24px 0 0;
+  padding:12px 12px calc(12px + env(safe-area-inset-bottom));
+  overflow:auto;
+  overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  transition:transform .32s ease, opacity .22s ease;
+  backdrop-filter:blur(14px) saturate(120%);
+  -webkit-backdrop-filter:blur(14px) saturate(120%);
+  box-shadow:0 -8px 34px rgba(255,79,160,.08);
+}
+#panel.closed{transform:translateY(calc(100% - 54px))}
+#handle{
+  position:sticky;
+  top:0;
+  z-index:12;
+  height:28px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin:-4px 0 8px;
+  cursor:pointer;
+}
+#handle:before{
+  content:"";
+  width:58px;
+  height:5px;
+  border-radius:99px;
+  background:#ff4fa3;
+  box-shadow:0 0 18px rgba(255,79,163,.9);
+}
+h1{font-size:15px;margin:0 0 4px;font-weight:900}
+p{font-size:11px;line-height:1.25;opacity:.72;margin:0 0 8px;color:rgba(255,220,236,.74)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px}
+.full{grid-column:1/-1}
+label{display:block;font-size:10px;font-weight:800;opacity:.9;margin-top:4px;color:#ff8fc4}
+.line{display:grid;grid-template-columns:1fr 50px;gap:6px;align-items:center}
+output{text-align:right;font-size:10px;opacity:.76;color:rgba(255,200,225,.82)}
+input,select{width:100%;margin-top:3px}
+input[type=text],input[type=number],select{
+  background:rgba(8,0,6,.28);
+  color:#fff;
+  border:1px solid rgba(255,79,160,.18);
+  border-radius:10px;
+  padding:8px;
+  outline:none;
+  font-size:13px;
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+}
+input[type=range]{accent-color:#ff4fa3}
+input[type=text]:focus,input[type=number]:focus,select:focus{border-color:rgba(255,79,160,.42);box-shadow:0 0 0 1px rgba(255,79,160,.18),0 0 18px rgba(255,79,160,.12)}
+
+.buttons{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px}
+button{border-radius:12px;border:1px solid rgba(255,79,160,.16);padding:10px 8px;font-weight:900;cursor:pointer}
+#random{background:linear-gradient(135deg,#ff2f98,#ff9ccc);color:#000;border:0}
+#reset,#export{background:rgba(7,0,5,.34);color:#fff}
+#toggle{
+  position:fixed;
+  left:max(12px, env(safe-area-inset-left));
+  top:max(12px, env(safe-area-inset-top));
+  z-index:20;
+  width:46px;
+  height:46px;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,.12);
+  background:#ff4fa3;
+  color:#000;
+  font-size:22px;
+  font-weight:900;
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  box-shadow:0 0 35px rgba(255,79,163,.55);
+}
+#badge{
+  position:fixed;
+  right:max(12px, env(safe-area-inset-right));
+  top:max(14px, env(safe-area-inset-top));
+  z-index:5;
+  padding:8px 12px;
+  border-radius:999px;
+  background:rgba(0,0,0,.52);
+  border:1px solid rgba(255,79,160,.18);
+  font-size:11px;
+  opacity:.72;
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+}
+@supports not ((backdrop-filter:blur(2px)) or (-webkit-backdrop-filter:blur(2px))){
+  #panel{background:rgba(12,0,8,.74)}
+  input[type=text],input[type=number],select{background:rgba(10,0,7,.68)}
+  #toggle,#badge{background:rgba(24,0,16,.78);color:#fff}
+  #random{background:linear-gradient(135deg,#ff2f98,#ff9ccc);color:#000}
+}
+@media(max-width:850px){
+  .grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:560px){
+  .grid{grid-template-columns:1fr 1fr}
+  #panel{height:52dvh}
+}
+@media(min-width:851px){
+  #panel{
+    left:16px;
+    right:auto;
+    top:16px;
+    bottom:16px;
+    width:min(440px, calc(100vw - 32px));
+    height:auto;
+    max-height:none;
+    border-radius:20px;
+    border:1px solid rgba(255,79,160,.18)
+  }
+  #panel.closed{transform:translateX(calc(-100% - 20px))}
+  #handle{display:none}
+}
+</style>
+</head>
+<body>
+<div id="app">
+<canvas id="c"></canvas>
+<button id="toggle" aria-label="Toggle settings">☰</button>
+<div id="badge">living underwater mesh</div>
+<aside id="panel" class="closed">
+<div id="handle"></div>
+<h1>Living Mesh Organism</h1>
+<p>Organic underwater motion: irregular ribs, variable hair lengths, soft light/shadow, no rigid mathematical edge.</p>
+<div class="grid">
+<div><label>Seed word</label><input id="seedText" type="text" value="living underwater mesh"></div>
+<div><div class="line"><label>Seed</label><output id="seedOut"></output></div><input id="seed" type="number" value="171732"></div>
+<div><div class="line"><label>Body style</label><output id="modeOut"></output></div><select id="mode"><option value="living">Living Flow</option><option value="mantle">Mantle</option><option value="jelly">Jelly</option><option value="spiral">Spiral</option><option value="reef">Reef</option></select></div>
+<div><div class="line"><label>Shape family</label><output id="familyOut"></output></div><select id="family"><option value="organic">Organic</option><option value="soft">Soft</option><option value="wild">Wild</option><option value="looped">Looped</option></select></div>
+
+<div><div class="line"><label>Density</label><output id="densityOut"></output></div><input id="density" type="range" min="0" max="1" value=".86" step=".01"></div>
+<div><div class="line"><label>Membrane width</label><output id="widthOut"></output></div><input id="width" type="range" min="0" max="1" value=".48" step=".01"></div>
+<div><div class="line"><label>Centre transparency</label><output id="transOut"></output></div><input id="trans" type="range" min="0" max="1" value=".70" step=".01"></div>
+<div><div class="line"><label>Living flow</label><output id="flowOut"></output></div><input id="flow" type="range" min="0" max="1" value=".92" step=".01"></div>
+<div><div class="line"><label>Asymmetry</label><output id="asymOut"></output></div><input id="asym" type="range" min="0" max="1" value=".64" step=".01"></div>
+<div><div class="line"><label>Undulation</label><output id="undulateOut"></output></div><input id="undulate" type="range" min="0" max="1" value=".78" step=".01"></div>
+<div><div class="line"><label>Scale</label><output id="scaleOut"></output></div><input id="scale" type="range" min=".4" max="3.6" value="1.76" step=".01"></div>
+<div><div class="line"><label>Rotation</label><output id="rotOut"></output></div><input id="rot" type="range" min="-180" max="180" value="-8" step="1"></div>
+
+<div><div class="line"><label>Pink light</label><output id="pinkOut"></output></div><input id="pink" type="range" min="0" max="1" value=".96" step=".01"></div>
+<div><div class="line"><label>Scene light</label><output id="sceneLightOut"></output></div><input id="sceneLight" type="range" min="0" max="1" value=".92" step=".01"></div>
+<div><div class="line"><label>Light softness</label><output id="lightSoftOut"></output></div><input id="lightSoft" type="range" min="0" max="1" value=".72" step=".01"></div>
+<div><div class="line"><label>Shadow depth</label><output id="shadowOut"></output></div><input id="shadow" type="range" min="0" max="1" value=".62" step=".01"></div>
+
+<div><div class="line"><label>Cross-line density</label><output id="crossDensityOut"></output></div><input id="crossDensity" type="range" min="1" max="8" value="5" step="1"></div>
+<div><div class="line"><label>Cross-line glow</label><output id="crossGlowOut"></output></div><input id="crossGlow" type="range" min="0" max="1" value=".82" step=".01"></div>
+<div><div class="line"><label>Cross irregularity</label><output id="crossIrregularOut"></output></div><input id="crossIrregular" type="range" min="0" max="1" value=".70" step=".01"></div>
+<div><div class="line"><label>Inner skin lines</label><output id="innerOut"></output></div><input id="inner" type="range" min="0" max="1" value=".78" step=".01"></div>
+
+<div><div class="line"><label>Edge hairs</label><output id="hairsOut"></output></div><input id="hairs" type="range" min="0" max="1" value=".82" step=".01"></div>
+<div><div class="line"><label>Hair length variety</label><output id="hairVarOut"></output></div><input id="hairVar" type="range" min="0" max="1" value=".88" step=".01"></div>
+<div><div class="line"><label>Hair softness</label><output id="hairSoftOut"></output></div><input id="hairSoft" type="range" min="0" max="1" value=".72" step=".01"></div>
+<div><div class="line"><label>Turquoise edge dots</label><output id="turqOut"></output></div><input id="turq" type="range" min="0" max="1" value=".86" step=".01"></div>
+<div><div class="line"><label>Dot density</label><output id="dotDensityOut"></output></div><input id="dotDensity" type="range" min="0" max="1" value=".58" step=".01"></div>
+<div><div class="line"><label>Dot glow</label><output id="dotGlowOut"></output></div><input id="dotGlow" type="range" min="0" max="1" value=".78" step=".01"></div>
+<div><div class="line"><label>Black dust</label><output id="blackDustOut"></output></div><input id="blackDust" type="range" min="0" max="1" value=".35" step=".01"></div>
+<div><div class="line"><label>Top position</label><output id="topPosOut"></output></div><input id="topPos" type="range" min=".18" max=".56" value=".33" step=".01"></div>
+
+<div class="full buttons"><button id="random">Randomize</button><button id="reset">Reset</button><button id="export">Export PNG</button></div>
+</div>
+</aside>
+</div>
+
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id), canvas=$("c"), ctx=canvas.getContext("2d",{alpha:false,desynchronized:true});
+const sliders=["density","width","trans","flow","asym","undulate","scale","rot","pink","sceneLight","lightSoft","shadow","crossDensity","crossGlow","crossIrregular","inner","hairs","hairVar","hairSoft","turq","dotDensity","dotGlow","blackDust","topPos"];
+const controls=["seedText","seed","mode","family"].concat(sliders);
+const defaults={seedText:"living underwater mesh",seed:171732,mode:"living",family:"organic",density:.86,width:.48,trans:.70,flow:.92,asym:.64,undulate:.78,scale:1.76,rot:-8,pink:.96,sceneLight:.92,lightSoft:.72,shadow:.62,crossDensity:5,crossGlow:.82,crossIrregular:.70,inner:.78,hairs:.82,hairVar:.88,hairSoft:.72,turq:.86,dotDensity:.58,dotGlow:.78,blackDust:.35,topPos:.33};
+function xmur3(str){let h=1779033703^str.length;for(let i=0;i<str.length;i++){h=Math.imul(h^str.charCodeAt(i),3432918353);h=h<<13|h>>>19;}return function(){h=Math.imul(h^(h>>>16),2246822507);h=Math.imul(h^(h>>>13),3266489909);return(h^=h>>>16)>>>0;};}
+function sfc32(a,b,c,d){return function(){a|=0;b|=0;c|=0;d|=0;let t=(a+b|0)+d|0;d=d+1|0;a=b^b>>>9;b=c+(c<<3)|0;c=c<<21|c>>>11;c=c+t|0;return(t>>>0)/4294967296;};}
+function rng(seed){const s=xmur3(seed);return sfc32(s(),s(),s(),s());}
+function v(id){return Number($(id).value)}
+function lerp(a,b,t){return a+(b-a)*t}
+function sync(){
+  $("seedOut").textContent=$("seed").value;
+  $("modeOut").textContent=$("mode").value;
+  $("familyOut").textContent=$("family").value;
+  sliders.forEach(id=>{const o=$(id+"Out"); if(o)o.textContent=id==="rot"?$("rot").value+"°":v(id).toFixed(id==="crossDensity"?0:2)});
+}
+function fam(){const f=$("family").value;if(f==="wild")return{wob:1.4,loop:1.25,hair:1.35};if(f==="looped")return{wob:.65,loop:1.9,hair:.85};if(f==="soft")return{wob:.45,loop:1.05,hair:.7};return{wob:.85,loop:1.45,hair:1.05};}
+function noise(rand,n=600){const a=Array.from({length:n},()=>rand()*2-1);return x=>{x=(x%1+1)%1;const p=x*(n-1),i=Math.floor(p),t=p-i,s=t*t*(3-2*t);return a[i]*(1-s)+a[(i+1)%n]*s}}
+function build(base,rand){
+ const F=fam(), mode=$("mode").value, N=Math.floor(240+v("density")*460), pts=[], n1=noise(rand), n2=noise(rand), n3=noise(rand);
+ for(let i=0;i<N;i++){
+  const t=i/(N-1), flow=v("flow"), asym=v("asym"), und=v("undulate");
+  let a,r;
+  if(mode==="mantle"){a=t*Math.PI*(2.1+flow*1.2);r=base*(.62+Math.sin(t*Math.PI*(3.2+flow*3.5))*und*.23);}
+  else if(mode==="jelly"){a=t*Math.PI*2;r=base*(.55+Math.sin(a*3.2)*und*.18+Math.sin(a*7.5)*.07);}
+  else if(mode==="spiral"){a=t*Math.PI*(3.8+flow*4.4);r=base*(.10+t*1.02)*(1+Math.sin(t*25)*und*.08);}
+  else if(mode==="reef"){a=t*Math.PI*(2.4+flow*1.8);r=base*(.58+Math.sin(t*Math.PI*5.2)*und*.18+Math.sin(t*Math.PI*11)*.04);}
+  else{a=t*Math.PI*(2.15+flow*1.55);r=base*(.60+Math.sin(t*Math.PI*(3.2+flow*4.2))*und*.22);}
+  const organic=base*(n1(t*.7)*.10+n2(t*1.8)*.055)*asym*F.wob;
+  const x=Math.cos(a+n3(t)*.25*asym)*r + Math.sin(t*(11+flow*18))*base*.22*und*F.loop + organic;
+  const y=Math.sin(a-n2(t)*.2*asym)*r*.64 + Math.cos(t*(9+flow*16))*base*.13 + n1(t*1.25)*base*.055*asym;
+  pts.push({x,y,t});
+ }
+ return pts;
+}
+function frame(pts,i,base){
+ const p=pts[i],pr=pts[Math.max(0,i-1)],ne=pts[Math.min(pts.length-1,i+1)];
+ const dx=ne.x-pr.x,dy=ne.y-pr.y,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len,env=Math.sin(p.t*Math.PI);
+ const width=base*(.10+v("width")*.55)*env*(.88+.18*Math.sin(p.t*31)*v("undulate"));
+ return{p,dx,dy,len,nx,ny,env,width};
+}
+function light(g,x,y,r,a,color){const rad=g.createRadialGradient(x,y,0,x,y,r);rad.addColorStop(0,"rgba(255,255,255,"+a*.85+")");rad.addColorStop(.12,color.replace("A",a));rad.addColorStop(1,color.replace("A",0));g.fillStyle=rad;g.beginPath();g.arc(x,y,r,0,Math.PI*2);g.fill()}
+function render(g,W,H,m){
+ m=m||1;g.save();g.setTransform(1,0,0,1,0,0);g.fillStyle="#000";g.fillRect(0,0,W,H);g.restore();
+ const seed=$("seedText").value+"::"+$("seed").value+"::"+$("mode").value+"::"+$("family").value,rand=rng(seed);
+ const base=Math.min(W,H)*.30*v("scale"), pts=build(base,rand), N=pts.length, cx=W*.5, cy=H*v("topPos");
+ g.save();g.translate(cx,cy);g.rotate(v("rot")*Math.PI/180);g.lineCap="round";g.lineJoin="round";
+ for(let n=0;n<5;n++){const idx=Math.floor(((n+.25)/5.5)*(N-1)),f=frame(pts,idx,base);light(g,f.p.x+f.nx*f.width*(rand()>.5?.55:-.55),f.p.y+f.ny*f.width*(rand()>.5?.55:-.55),base*(.11+.22*v("lightSoft"))*m,v("sceneLight")*(.22+.16*rand()),"rgba(255,45,165,A)")}
+ for(let n=0;n<4;n++){const idx=Math.floor(rand()*N),f=frame(pts,idx,base);light(g,f.p.x,f.p.y,base*(.09+.18*rand())*m,v("shadow")*.45,"rgba(0,0,0,A)")}
+ const streams=Math.floor(28+v("inner")*120);
+ for(let s=0;s<streams;s++){
+  const k=lerp(-.90,.90,s/Math.max(1,streams-1)), broken=rng(seed+"stream"+s);
+  g.beginPath(); let started=false;
+  for(let i=2;i<N-2;i++){
+    const f=frame(pts,i,base), wave=Math.sin(f.p.t*(14+v("flow")*28)+s*.51)*f.width*.065*v("flow");
+    if(broken()<.002*v("asym")){started=false; continue}
+    const x=f.p.x+f.nx*(f.width*k+wave),y=f.p.y+f.ny*(f.width*k+wave);
+    if(!started){g.moveTo(x,y);started=true}else g.lineTo(x,y);
+  }
+  const op=(.018+.13*v("inner"))*(1-v("trans")*.76)*(0.6+broken()*.8);
+  g.shadowBlur=(4+9*v("sceneLight"))*m;g.shadowColor="rgba(255,70,170,.16)";
+  g.strokeStyle="rgba(255,"+Math.floor(105+v("pink")*110)+","+Math.floor(170+v("pink")*65)+","+op+")";g.lineWidth=(.18+broken()*.34)*m;g.stroke();
+ }
+ const step=Math.max(1,Math.floor((9-v("density")*5)/v("crossDensity")));
+ for(let i=2;i<N-2;i+=step){
+  const f=frame(pts,i,base),w=f.width, shorten=v("crossIrregular")*Math.pow(rand(),2)*.55;
+  const a1=1-shorten*rand(), a2=1-shorten*rand();
+  const x1=f.p.x+f.nx*w*a1, y1=f.p.y+f.ny*w*a1, x2=f.p.x-f.nx*w*a2, y2=f.p.y-f.ny*w*a2;
+  const glow=(.12+.50*f.env*v("crossGlow"))*(.45+rand()*.75);
+  const grad=g.createLinearGradient(x1,y1,x2,y2);
+  grad.addColorStop(0,"rgba(255,245,255,"+glow+")");grad.addColorStop(.28,"rgba(255,80,175,"+glow*.66+")");grad.addColorStop(.5,"rgba(255,70,170,"+glow*.25+")");grad.addColorStop(.72,"rgba(255,80,175,"+glow*.66+")");grad.addColorStop(1,"rgba(255,245,255,"+glow+")");
+  g.shadowBlur=(2+12*v("crossGlow"))*m;g.shadowColor="rgba(255,70,170,.42)";g.strokeStyle=grad;g.lineWidth=(.12+f.env*(.25+.70*v("crossGlow"))*(.45+rand()))*m;
+  g.beginPath();g.moveTo(x1,y1);
+  g.bezierCurveTo(f.p.x+f.dx/f.len*w*.06*Math.sin(f.p.t*30),f.p.y+f.dy/f.len*w*.06*Math.cos(f.p.t*27),f.p.x-f.dx/f.len*w*.04*Math.sin(f.p.t*21),f.p.y-f.dy/f.len*w*.04*Math.cos(f.p.t*18),x2,y2);
+  g.stroke();
+ }
+ const tips=[], F=fam(), hstep=Math.max(2,Math.floor(14-10*v("hairs")));
+ for(let i=4;i<N-4;i+=hstep){
+  const f=frame(pts,i,base);
+  for(const side of[-1,1]){
+   if(rand()>.35+.55*v("hairs"))continue;
+   const sx=f.p.x+f.nx*f.width*side,sy=f.p.y+f.ny*f.width*side;
+   const len=f.width*v("hairs")*(.22+v("hairVar")*Math.pow(rand(),.45)*1.9+v("hairSoft")*.25)*F.hair;
+   const curl=(rand()-.5)*len*(.55+v("hairVar")*.55);
+   const ex=sx+f.nx*side*len+f.dx/f.len*curl,ey=sy+f.ny*side*len+f.dy/f.len*curl;
+   tips.push({x:ex,y:ey,baseX:sx,baseY:sy});
+   g.shadowBlur=(8+10*v("sceneLight"))*m;g.shadowColor="rgba(255,65,170,.33)";
+   g.strokeStyle=rand()>.22?"rgba(255,70,170,.42)":"rgba(255,235,255,.24)";g.lineWidth=(.10+rand()*.45)*m;
+   g.beginPath();g.moveTo(sx,sy);
+   g.bezierCurveTo(sx+f.nx*side*len*.35+f.dx/f.len*curl*.15,sy+f.ny*side*len*.35+f.dy/f.len*curl*.15,sx+f.nx*side*len*.75-f.dx/f.len*curl*.15,sy+f.ny*side*len*.75-f.dy/f.len*curl*.15,ex,ey);g.stroke();
+  }
+ }
+ const dots=Math.floor((130+v("dotDensity")*1050)*(W*H/(2160*3840)+.6));
+ for(let d=0;d<dots;d++){
+  let x,y;
+  if(tips.length&&rand()<.58){const t=tips[Math.floor(rand()*tips.length)],q=rand();x=lerp(t.baseX,t.x,q)+(rand()-.5)*base*.012;y=lerp(t.baseY,t.y,q)+(rand()-.5)*base*.012}
+  else{const i=Math.floor(rand()*(N-6))+3,f=frame(pts,i,base),side=rand()>.5?1:-1,dist=f.width*side*(.82+rand()*.35);x=f.p.x+f.nx*dist+f.dx/f.len*(rand()-.5)*base*.020;y=f.p.y+f.ny*dist+f.dy/f.len*(rand()-.5)*base*.020}
+  const r=(.18+v("dotDensity")*.35)*(0.6+rand()*1.5)*m;
+  g.save();g.shadowBlur=(3+14*v("dotGlow"))*m;g.shadowColor="rgba(55,255,255,.62)";g.fillStyle="rgba(70,255,255,"+(.12+.62*v("turq"))+")";g.beginPath();g.arc(x,y,r,0,Math.PI*2);g.fill();g.restore();
+ }
+ const bd=Math.floor((90+v("blackDust")*800)*(W*H/(2160*3840)+.55));
+ for(let d=0;d<bd;d++){const i=Math.floor(rand()*(N-6))+3,f=frame(pts,i,base),x=f.p.x+(rand()-.5)*base*.45,y=f.p.y+(rand()-.5)*base*.28,r=(.5+rand()*4)*m;g.fillStyle="rgba(0,0,0,"+(.04+.24*rand()*v("blackDust"))+")";g.beginPath();g.arc(x,y,r,0,Math.PI*2);g.fill()}
+ g.restore();
+}
+function draw(){sync();render(ctx,canvas.width,canvas.height,1)}
+let raf=null;
+function schedule(){cancelAnimationFrame(raf);raf=requestAnimationFrame(draw)}
+function resize(){
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  const w=Math.max(1,Math.round(window.innerWidth*dpr));
+  const h=Math.max(1,Math.round(window.innerHeight*dpr));
+  canvas.width=w;
+  canvas.height=h;
+  canvas.style.width=window.innerWidth+"px";
+  canvas.style.height=window.innerHeight+"px";
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.scale(dpr,dpr);
+  schedule();
+}
+controls.forEach(id=>{$(id).addEventListener("input",schedule,{passive:true});$(id).addEventListener("change",schedule,{passive:true})});
+$("random").onclick=()=>{$("seed").value=Math.floor(Math.random()*999999);schedule()}
+$("reset").onclick=()=>{Object.entries(defaults).forEach(([k,val])=>{if($(k))$(k).value=val});schedule()}
+$("export").onclick=()=>{const out=document.createElement("canvas");out.width=2160;out.height=3840;render(out.getContext("2d",{alpha:false}),out.width,out.height,2.2);const a=document.createElement("a");a.download="living_underwater_pink_turquoise_mesh.png";a.href=out.toDataURL("image/png");a.click()}
+function togglePanel(){$("panel").classList.toggle("closed")}
+$("toggle").onclick=togglePanel;
+$("handle").onclick=togglePanel;
+window.addEventListener("resize",resize,{passive:true});
+window.addEventListener("orientationchange",()=>setTimeout(resize,300),{passive:true});
+window.addEventListener("pageshow",resize,{passive:true});
+resize();
+})();
+</script>
+</body>
+</html>
