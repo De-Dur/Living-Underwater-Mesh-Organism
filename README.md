@@ -26,7 +26,7 @@ It allows the visual to stay alive and change through interaction instead of exi
 
 ## Files
 
-- `bio_structure_20260411_A.html` — the main interactive artwork
+- `index.html` — the main interactive artwork
 - `README.md` — project description and usage guide
 
 ## Help
